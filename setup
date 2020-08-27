@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -e
+
+if [ ! -d $HOME/.vim/bundle/Vundle.vim ]; then
+    echo 'cloning Vundle into ~/.vim/bundle'
+    git clone https://github.com/gmarik/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+fi
+
+if [ -f $HOME/.vimrc ]; then
+    echo 'removing existing vimrc file'
+    rm $HOME/.vimrc
+fi
+
+cp vimrc $HOME/.vimrc
+vim +PluginInstall +qall
+
+if ( ! which cmake); then
+    echo 'installing cmake'
+    if (which conda); then
+        echo 'detected conda'
+        conda install cmake
+    elif [[ $OSTYPE == "darwin"* ]]; then
+        echo 'detected MacOS'
+        brew install cmake
+    elif [[ $OSTYPE == "linux-gnu"* ]]; then
+        echo 'detected Linux'
+        sudo apt-get install cmake
+    fi
+fi
+
+if ( ! which go); then
+    echo 'installing Go'
+    conda install go
+    mkdir -p $HOME/.cache/go-build
+    echo "export GOCACHE="$HOME/.cache/go-build"" >> ~/.bashrc
+    source ~/.bashrc
+
+fi
+
+if ( ! which npm); then
+    echo 'installing Nodejs'
+    conda install -c conda-forge nodejs
+fi
+
+if [ ! -f $HOME/.vim/syntax/snakemake.vim ]; then
+    mkdir -p $HOME/.vim/syntax
+    wget -O $HOME/.vim/syntax/snakemake.vim https://raw.githubusercontent.com/snakemake/snakemake/master/misc/vim/syntax/snakemake.vim
+fi
+
+
+echo 'compiling YCM'
+cd $HOME/.vim/bundle/YouCompleteMe
+python3 install.py --all
+
+cd -
